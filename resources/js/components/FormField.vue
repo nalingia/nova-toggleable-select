@@ -19,7 +19,8 @@
 </template>
 
 <script>
-import { FormField, HandlesValidationErrors } from 'laravel-nova'
+import { FormField, HandlesValidationErrors } from 'laravel-nova';
+import { flatten, uniq } from 'ramda';
 
 export default {
   mixins: [HandlesValidationErrors, FormField],
@@ -59,8 +60,16 @@ export default {
 
         this.resetVisibility();
 
-        const fields = this.field.toggle[this.value];
-        (fields || [])
+        const fields = this.field.toggle[this.value] || [];
+        uniq(flatten(Object.values(this.field.toggle)))
+          .filter(field => fields.indexOf(field) < 0)
+          .forEach(field => {
+            if (this.fieldsMap[field] && this.fieldsMap[field].handleChange) {
+              this.fieldsMap[field].handleChange('');
+            }
+          });
+
+        fields
             .forEach(field => {
                 if (this.fieldsMap[field]) {
                     this.fieldsMap[field].$el.classList.remove('nalingia-toggleable-select-hidden');
